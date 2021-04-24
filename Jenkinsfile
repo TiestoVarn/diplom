@@ -1,15 +1,9 @@
-        stage('Test') {
-            agent {
-                docker {
-                    image 'qnib/pytest'
-                }
-            }
-            steps {
-                sh 'py.test --junit-xml test-reports/results.xml sources/test_calc.py'
-            }
-            post {
-                always {
-                    junit 'test-reports/results.xml'
-                }
-            }
-        }
+@Library('jenkins-devops-libs@v1.4.0')_
+
+pipeline {
+  agent none
+
+  parameters {}
+
+  environment { KUBECONFIG = '$HOME/.kube/config' }
+}
