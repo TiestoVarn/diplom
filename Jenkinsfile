@@ -17,19 +17,19 @@ spec:
                 checkout([$class: 'GitSCM', branches: [[name: '*/dev']],
                 userRemoteConfigs: [[url: 'https://github.com/TiestoVarn/diplom.git']]])
             }
-            stage("Compile"){
-                sh "pwd & ls -la"
-                sleep 13
-            }
+//             stage("Compile"){
+//                 sh "pwd & ls -la"
+//                 sleep 13
+//             }
             stage("Build && Push images") {
                   docker.withRegistry('https://registry.hub.docker.com', 'DockerHubCreeds') {
                   def newApp = docker.build "tiestovarn/docker:${env.BUILD_TAG}"
                   newApp.push()
                  }
             }
-            stage("Deploy"){
-                sleep 62 
-            }
+//             stage("Deploy"){
+//                 sleep 62 
+//             }
         }
     }
 }
