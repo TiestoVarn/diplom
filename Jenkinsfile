@@ -1,69 +1,35 @@
-// pipeline {
-
-//   agent any
-
-//   stages {
-
-//     stage('Checkout Source') {
-//       steps {
-//         git 'https://github.com/justmeandopensource/playjenkins.git'
-//       }
-//     }
-
-//     stage('Build image') {
-//       steps{
-//         script {
-//           app = docker.build("tiestovarn/docker") + ":$BUILD_NUMBER"
-//         }
-//       }
-//     }
-//     stage('Docker Login'){
-//       steps {
-//         script {
-//             withCredentials([string(credentialsId: 'DockerHubCreeds', variable: 'PASSWORD')]) {
-//                 sh 'docker login -u tiestovarn -p $PASSWORD'
-//               }
+podTemplate(yaml: '''
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: docker
+    image: docker:19.03.1-dind
+    securityContext:
+      privileged: true
+    env:
+      - name: DOCKER_TLS_CERTDIR
+        value: ""
+''') {
+    node(POD_LABEL) {
+        container('docker') {
+            stage(" Checkout"){
+                checkout([$class: 'GitSCM', branches: [[name: '*/master']],
+                userRemoteConfigs: [[url: 'https://github.com/TiestoVarn/diplom.git']]])
+            }
+//             stage("Compile"){
+//                 sh "pwd & ls -la"
+//                 sleep 13
 //             }
-//           }
-//         } 
-//     stage('Push Image to Docker Hub'){
-//       steps {
-//         script {
-//             sh 'docker push tiestovarn/docker:latest'
-//           }
-//         }
-//       }
-
-//     stage('Deploy App') {
-//       steps {
-//         script {
-//           kubernetesDeploy(configs: "myweb.yaml", kubeconfigId: "mykubeconfig")
-//         }
-//       }
-//     }
-
-//   }
-
-// }
-node {
-    
-        withCredentials([string(credentialsId: 'DOCKER_HUB_PASSWORD', variable: 'PASSWORD')]) {
-        sh 'docker login -u tiestovarn -p $PASSWORD'
-    }
-    
-    stage("Docker build"){
-        sh 'docker build -t diplom .'
-        sh 'docker image list'
-        sh 'docker tag diplom tiestovarn/docker:diplom'
-    }
-
-
-    stage("Push Image to Docker Hub"){
-        sh 'docker push  tiestovarn/docker:diplom'
-    }
-    stage("Deploy App"){
-        sh "ls -la && pwd"
-        sh kubernetesDeploy(configs: "myweb.yaml", kubeconfigId: "mykubeconfig")
+            stage("Build && Push images") {
+                  docker.withRegistry('https://registry.hub.docker.com', 'DockerHubCreeds') {
+                  def newApp = docker.build "tiestovarn/docker:${env.BUILD_TAG}"
+                  newApp.push()
+                 }
+            }
+//             stage("Deploy"){
+//                 sleep 62 
+//             }
         }
-
+    }
 }
