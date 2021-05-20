@@ -14,7 +14,7 @@ spec:
     node(POD_LABEL) {
         container('docker') {
             stage(" Checkout"){
-                checkout([$class: 'GitSCM', branches: [[name: '*/master']],
+                checkout([$class: 'GitSCM', branches: [[name: '*/dev']],
                 userRemoteConfigs: [[url: 'https://github.com/TiestoVarn/diplom.git']]])
             }
             stage("Compile"){
